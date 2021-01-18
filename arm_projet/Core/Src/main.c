@@ -233,6 +233,7 @@ static void MX_RTC_Init(void)
   if (HAL_RTC_Init(&hrtc) != HAL_OK)
   {
     Error_Handler();
+    HAL_Delay(1000);
   }
   /* USER CODE BEGIN RTC_Init 2 */
 

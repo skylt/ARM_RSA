@@ -12,11 +12,13 @@
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
+#include "uart_syscalls.h"
+
 e_rsa_status rsa_status;
 
 
 #define B64_SHA_LEN 64
-#define PWD_LEN 10
+#define PWD_LEN 11
 #define SHA_LEN 512
 
 char rsa_passwd[PWD_LEN];
@@ -84,7 +86,7 @@ void rsa_gen_private_key(void) {
 
 void rsa_init_passwd(char *passwd) {
 	printf("Please enter a 10 character password\r\n");
-	scanf("%10s", passwd);
+	_read(1, &passwd, 10);
 	rsa_status = waiting_sha;
 }
 
@@ -132,9 +134,7 @@ void rsa_sign_buffer(char* buffer) {
 
 
 void rsa_receive_sha(char* sha_buf, char *sha_buf_decoded) {
-	char fmt[128];
-	sprintf(fmt, "%%%ds", B64_SHA_LEN);
-	scanf(fmt, sha_buf);
+	_read(1, &sha_buf, B64_SHA_LEN);
 
 	int wlen;
 	int ret = mbedtls_base64_decode(
@@ -160,10 +160,10 @@ static void rsa_printf_mbedtls_mpi(mbedtls_mpi *mpi) {
 	size_t len = 0;
 
 	mbedtls_mpi_write_string(mpi, 16, &buf, 510, &len);
-	printf("##############");
+	printf("####\r\n");
 	buf[len] = '\0';
 	printf("%s\r\n", buf);
-	printf("##############");
+	printf("####\r\n");
 }
 
 void rsa_print_public_key(void) {
@@ -176,7 +176,7 @@ int rsa_check_password(char *passwd) {
 	char entered_passwd[16];
 
 	printf("Please enter password: \r\n");
-	scanf("%10s", entered_passwd);
+	_read(1, &entered_passwd, 10);
 
 	if (strncmp(entered_passwd, passwd, 10)) {
 		printf("Failed entering password\r\n");
@@ -189,12 +189,12 @@ int rsa_check_password(char *passwd) {
 
 
 void rsa_handler(void) {
-	printf("Please enter your choice:\r\n1: Send pubkey\r\n2: Init Passwd\r\n3: Receive SHA\r\n4: Sign SHA");
-	int choice = 1;
-	scanf("%d", &choice);
-	switch(choice)
+	printf("Please enter your choice:\r\n1: Send pubkey\r\n2: Init Passwd\r\n3: Receive SHA\r\n4: Sign SHA\r\n");
+	char choice[10];
+	_read(1, &choice, 1);
+	switch(choice[0])
 	{
-		case 1: // Send Pubkey
+		case '1': // Send Pubkey
 			if (rsa_status == waiting_key_gen) {
 				printf("Error: Key not generated, please reboot\r\n");
 				error_led();
@@ -203,7 +203,7 @@ void rsa_handler(void) {
 			rsa_print_public_key();
 			break;
 
-		case 2: // Init passwd
+		case '2': // Init passwd
 			if (rsa_status != waiting_passwd_init) {
 				printf("Cannot change password once initialized \r\n");
 				return;
@@ -211,7 +211,7 @@ void rsa_handler(void) {
 			rsa_init_passwd(rsa_passwd);
 			break;
 
-		case 3: // Receive SHA
+		case '3': // Receive SHA
 			if (rsa_status != waiting_sha) {
 				printf("Not waiting for sha\r\n");
 				return;
@@ -220,7 +220,7 @@ void rsa_handler(void) {
 			break;
 
 
-		case 4: // Get passwd and send signature
+		case '4': // Get passwd and send signature
 			if (rsa_status != ready) {
 				printf("SHA not send or password not initialized\r\n");
 				return;
