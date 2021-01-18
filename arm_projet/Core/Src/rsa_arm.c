@@ -86,7 +86,7 @@ void rsa_gen_private_key(void) {
 
 void rsa_init_passwd(char *passwd) {
 	printf("Please enter a 10 character password\r\n");
-	_read(1, &passwd, 10);
+	_read(1, passwd, 10);
 	rsa_status = waiting_sha;
 }
 
@@ -127,14 +127,14 @@ void rsa_sign_buffer(char* buffer) {
 		return;
 	}
 
-	printf(b64tosend);
+	printf("%s\r\n", b64tosend);
 	succes_led();
 }
 
 
 
 void rsa_receive_sha(char* sha_buf, char *sha_buf_decoded) {
-	_read(1, &sha_buf, B64_SHA_LEN);
+	_read(1, sha_buf, B64_SHA_LEN);
 
 	int wlen;
 	int ret = mbedtls_base64_decode(
@@ -159,7 +159,7 @@ static void rsa_printf_mbedtls_mpi(mbedtls_mpi *mpi) {
 	char buf[512];
 	size_t len = 0;
 
-	mbedtls_mpi_write_string(mpi, 16, &buf, 510, &len);
+	mbedtls_mpi_write_string(mpi, 16, buf, 510, &len);
 	printf("####\r\n");
 	buf[len] = '\0';
 	printf("%s\r\n", buf);
@@ -176,7 +176,7 @@ int rsa_check_password(char *passwd) {
 	char entered_passwd[16];
 
 	printf("Please enter password: \r\n");
-	_read(1, &entered_passwd, 10);
+	_read(1, entered_passwd, 10);
 
 	if (strncmp(entered_passwd, passwd, 10)) {
 		printf("Failed entering password\r\n");
@@ -191,7 +191,7 @@ int rsa_check_password(char *passwd) {
 void rsa_handler(void) {
 	printf("Please enter your choice:\r\n1: Send pubkey\r\n2: Init Passwd\r\n3: Receive SHA\r\n4: Sign SHA\r\n");
 	char choice[10];
-	_read(1, &choice, 1);
+	_read(1, choice, 1);
 	switch(choice[0])
 	{
 		case '1': // Send Pubkey
@@ -216,7 +216,7 @@ void rsa_handler(void) {
 				printf("Not waiting for sha\r\n");
 				return;
 			}
-			rsa_receive_sha(&rsa_b64_sha_buf, &rsa_sha_buf);
+			rsa_receive_sha(rsa_b64_sha_buf, rsa_sha_buf);
 			break;
 
 
@@ -226,10 +226,10 @@ void rsa_handler(void) {
 				return;
 			}
 
-			if (!rsa_check_password(rsa_passwd)) {
+			if (rsa_check_password(rsa_passwd)) {
 				return;
 			}
-			rsa_sign_buffer(&rsa_sha_buf);
+			rsa_sign_buffer(rsa_sha_buf);
 
 			break;
 

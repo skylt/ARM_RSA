@@ -13,7 +13,7 @@ void _register_uart(UART_HandleTypeDef *uart) {
 int _read(int file, char *ptr, int len) {
 	memset(ptr, 0, len);
 	for (;;) {
-		if (HAL_UART_Receive(_handle_uart, (unsigned char*) ptr, len, 1000) == HAL_OK)
+		if (HAL_UART_Receive(_handle_uart, (unsigned char*) ptr, len, 10000) == HAL_OK)
 			return strlen(ptr);
 		if (strchr(ptr, '\n') != NULL)
 			return ptr - strchr(ptr, '\n');
