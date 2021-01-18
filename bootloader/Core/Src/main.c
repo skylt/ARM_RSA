@@ -140,7 +140,7 @@ int main(void)
     EraseInit.TypeErase = TYPEERASE_SECTORS;
     EraseInit.Sector = FLASH_SECTOR_5;
     EraseInit.NbSectors = 1;
-    EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
+    EraseInit.VoltageRange = FLASH_VOLTAGE_RANGE_3;
     uint32_t SectorError = 0xFFFFFFFF;
     if (HAL_FLASHEx_Erase(&EraseInit, &SectorError) != HAL_OK)
     {
